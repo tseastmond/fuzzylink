@@ -14,68 +14,131 @@ import pandas as pd
 import sys
 
 
+
+
+###############################################################################
+###############################################################################
+###############################################################################
 # Make a function to filter out rows.
 def RowFilter(row, val, nomismatch=[], fuzzy=[], strthresh=0.9,
               numthresh=1, allowmiss=False):
+    '''
+    Compares two series of data and returns 'True' if the series are a match
+    based on the specified criteria or 'False' otherwise.
+
+    This is an appendage to Match(.) and is intended for use in an 'apply' or
+    'map' command.
+
+    Parameters
+    ----------
+    row        - Pandas series with the values to check against 'val'.
+    val        - Pandas series with the main values we are trying to match.
+    nomismatch - list - List of columns requiring no discrepancy in nonmissing
+                 values, but will allow a match between missing and a value.
+    fuzzy      - list - List of columns requiring a fuzzy match, with the
+                 threshold specified by strthresh or numthresh, depending
+                 on the column type.
+    strthresh  - float or dict - The threshold for Jaro-Winkler score below
+                 which the rows are not a match. If a dictionary is passed,
+                 it must have one entry per fuzzy column specifying
+                 the threshold for each.
+    numthresh  - float - The threshold for numeric variables absolute
+                 difference outside of which the rows are not a match.
+    allowmiss  - bool - Allow a mismatch in fuzzy due to missing values.
+
+    Returns
+    -------
+    'True' for matches and 'False' for nonmatches.
+    '''
     # Make a dictionary as needed.
     if type(strthresh) != dict:
-        strthresh = {: strthresh}
+        strthresh = {col : strthresh for col in fuzzy}
 
     if type(numthresh) != dict:
-        numthresh = {col.name : numthresh}
+        numthresh = {col : strthresh for col in fuzzy}
 
 
-
-    # Loop over the nomismatch columns.
+    # First check the nomismatch columns.
     for col in nomismatch:
-        if row[col] not in ['', val]:
+        if row[col] not in ['', val[col]]:
             return False
 
-    # Loop over the fuzzy columns.
+
+    # Next check the fuzzy columns.
     for col in fuzzy:
-        jaro_winkler(row[col], val) < strthresh[col]
-
-# Make a function to filter out rows.
-def RowFilter(col, nomismatch=[], fuzzy=[], strthresh=0.9,
-              numthresh=1, allowmiss=False):
-    if type(strthresh) != dict:
-        strthresh = {col.name : strthresh}
-
-    if type(numthresh) != dict:
-        numthresh = {col.name : numthresh}
-
-    col = col.reset_index(drop=True)
-
-    if col.name in nomismatch:
-        return [col[0] in ['', y] for y in col]
-
-    elif col.name in fuzzy:
-        if type(col[0]) == str:
-            if allowmiss:
-                return [(jaro_winkler(col[0], y) > strthresh[col.name]) or (col[0] == '') or (y == '') for y in col]
+        if type(row[col]) == str:
+            if allowmiss and (row[col] == '' or val[col] == '' or pd.isnull(row[col]) or pd.isnull(val[col])):
+                pass
             else:
-                return [jaro_winkler(col[0], y) > strthresh[col.name] for y in col]
-
+                if jaro_winkler(row[col], val[col]) < strthresh[col]:
+                    return False
         else:
-            if allowmiss:
-                return [(abs(col[0] - y) <= numthresh[col.name]) or (pd.isnull(col[0])) or (pd.isnull(y)) for y in col]
+            if allowmiss and (pd.isnull(row[col]) or pd.isnull(val[col])):
+                pass
             else:
-                return [abs(col[0] - y) <= numthresh[col.name] for y in col]
+                if abs(row[col] - val[col]) > numthresh[col]:
+                    return False
+
+
+    # If we passed all of the checks, return True.
+    return True
 
 
 
+
+###############################################################################
+###############################################################################
+###############################################################################
 # Make a function to aggregate rows.
 def RowAgg(col, agg='mode'):
+    '''
+    Aggregates all passed rows into one based on the specified criteria.
+
+    This is an appendage to Match(.) and is intended for use in an 'apply' or
+    'map' command.
+
+    Parameters
+    ----------
+    col        - Pandas series to aggregate.
+    agg        - str or dict - The mode of aggregation for columns not
+                 specified in 'exact'. May be one of the following,
+                 the default is 'mode':
+                     - 'mode'  - Take the mode of the values in matched rows.
+                     - 'sum'   - Take the sum of the values in matched rows.
+                     - 'mean'  - Take the mean of the values in matched rows.
+                     - 'count' - Count the number of nonmissing/nonempty
+                                 values in matched rows.
+                     - 'len'   - Take the longest string from among the
+                                 options.
+                     - 'all'   - Return a list with all of the values.
+                     - A dictionary using these options as the keys, which will
+                       apply the different aggregation to each column:
+
+                           {'mode' : [col1, col2, col3], 'sum' : [col6],
+                           'mean' : [col5, col7]}
+    Returns
+    -------
+    A single value aggregated from the column as specified.
+    '''
+    # Make agg a dictionary as needed.
     if type(agg) != dict:
         agg = {agg : col.name}
 
+
+    # Ensure that the dictionary has all needed keys.
     for x in ['mode', 'sum', 'mean', 'count', 'len', 'all']:
         if x not in agg.keys():
             agg[x] = []
 
+
+    # Reset the index for our column.
     col = col.reset_index(drop=True)
 
+    # Check what the specified mode of aggregation is.
     if col.name in agg['mode']:
+        # For 'mode', return the mode of the column. If the mode is an empty string,
+        #   return that only if it is the only possible value. This assumes at
+        #   least one nonmissing value.
         if col.value_counts().index[0] != '' or len(col.value_counts().index) == 1:
             return col.value_counts().index[0]
 
@@ -83,25 +146,36 @@ def RowAgg(col, agg='mode'):
             return col.value_counts().index[1]
 
     elif col.name in agg['sum']:
+        # For 'sum', return the sum of the column.
         return sum(col)
 
     elif col.name in agg['mean']:
+        # For 'mean', return the mean of the column.
         return np.mean(col)
 
     elif col.name in agg['count']:
+        # For 'count', return the number of nonmissing observations.
         return len(list(filter(None, col)))
 
     elif col.name in agg['len']:
+        # For 'len', return the longest string in the column.
         return sorted(col, key=len)[-1]
 
     elif col.name in agg['all']:
+        # For 'all', concatenate all values in the column into a list and
+        #   return that list.
         return list(col.value_counts().index)
 
     else:
+        # If nothing is specified, return the first value.
         return col[0]
 
 
 
+
+###############################################################################
+###############################################################################
+###############################################################################
 # Make a function for matching.
 def Match(df, exact, nomismatch=[], fuzzy=[], agg='mode', strthresh=0.9,
           numthresh=1, allowmiss=False, disp=5):
@@ -109,7 +183,8 @@ def Match(df, exact, nomismatch=[], fuzzy=[], agg='mode', strthresh=0.9,
     This takes a Pandas DataFrame with potential duplicate rows and matches
     them based on the columns you specify. It then returns two dataframes,
     one with matched obeservations and one with unmatched observations.
-    It requires at least one column on which to make an exact match.
+    It requires at least one column on which to make an exact match and allows
+    fuzzy matches based on any other columns.
 
     The matched data will be collapsed (i.e. each row matched with other
     rows will be collapsed into one row) based on the aggregation you specify.
@@ -187,7 +262,7 @@ def Match(df, exact, nomismatch=[], fuzzy=[], agg='mode', strthresh=0.9,
     count = disp
     for val in vals:
         # Make a new DataFrame to house matches on exact.
-        temp = unmatched.loc[unmatched['__exact__'] == val, :]
+        temp = unmatched.loc[unmatched['__exact__'] == val, :].reset_index(drop=True)
 
 
         # Update total to track our progress.
@@ -202,12 +277,14 @@ def Match(df, exact, nomismatch=[], fuzzy=[], agg='mode', strthresh=0.9,
         # Check for discrepancies in the nomismatch columns and fuzzy columns.
         while len(temp) > 0:
             # Get the matching indecies for the first entry.
-            fil = temp.apply(RowFilter, axis=0, args=(nomismatch, fuzzy, strthresh)).all(axis=1)
+            fil = temp.apply(RowFilter, axis=1, args=(temp.loc[0],
+                nomismatch, fuzzy, strthresh,
+                numthresh, allowmiss))
 
             # Get the matching rows and delete from temp.
             new = temp.loc[fil, :]
 
-            temp = temp.loc[~fil, :]
+            temp = temp.loc[~fil, :].reset_index(drop=True)
 
             # Move forward if only one observation.
             if len(new) == 1:
