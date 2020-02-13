@@ -69,6 +69,8 @@ def RowFilter(row, val, nomismatch=[], fuzzy=[], strthresh=0.9,
         if type(row[col]) == str:
             if allowmiss and (row[col] == '' or val[col] == '' or pd.isnull(row[col]) or pd.isnull(val[col])):
                 pass
+            elif (row[col] == '' or pd.isnull(row[col])) and (val[col] == '' or pd.isnull(val[col])):
+                pass
             else:
                 if jaro_winkler(row[col], val[col]) < strthresh[col]:
                     return False
@@ -133,6 +135,7 @@ def RowAgg(col, agg='mode'):
 
     # Reset the index for our column.
     col = col.reset_index(drop=True)
+
 
     # Check what the specified mode of aggregation is.
     if col.name in agg['mode']:
