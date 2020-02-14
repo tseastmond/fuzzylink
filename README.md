@@ -21,13 +21,13 @@ Requires the Python jellyfish, pandas, sys, and time modules.
 
 ### Original DataFrame (called df):
 
-fl	|	pid	|	birthdate	|	deathdate	|	serial	   |	state		|
------------------------------------------------------------------------------------------------------------------
-Fu	|		|			|			|		   |	New York	|
-Ta	|		|	13 Oct 1918	|			|		   |	New York	|
-Ca	|		|	09 Oct 1918	|			|	2721800.0  |	Vermont		|
-Fu	|		|	05 Oct 1918	|			|	1706020	   |	New York	|
-Ta	|		|	13 Oct 1918	|			|		   |	New York	|
+|fl	|	pid	|	birthdate	|	deathdate	|	serial	   |	state		|
+|---|-------|---------------|---------------|--------------|----------------|
+|Fu	|		|			|			|		   |	New York	|
+|Ta	|		|	13 Oct 1918	|			|		   |	New York	|
+|Ca	|		|	09 Oct 1918	|			|	2721800.0  |	Vermont		|
+|Fu	|		|	05 Oct 1918	|			|	1706020	   |	New York	|
+|Ta	|		|	13 Oct 1918	|			|		   |	New York	|
 
 
 
