@@ -31,7 +31,7 @@ Requires the Python jellyfish, pandas, sys, and time modules.
 
 ### Code:
 
-matched, unmatched = Match(df, ['fl'], nomismatch=['pid', 'birthdate', 'deathdate', 'serial', 'state'], 
+    matched, unmatched = Match(df, ['fl'], nomismatch=['pid', 'birthdate', 'deathdate', 'serial', 'state'], 
                            fuzzy=['name', 'firstname', 'middlename', 'lastname'], strthresh={'name' : 0.85,
                                  'firstname' : 0.9, 'middlename' : 0.7, 'lastname' : 0.9}, allowmiss=True,
                            disp=0.1, agg={'mode' : cols, 'all' : ['url', 'index'], 'len' : ['name']})
