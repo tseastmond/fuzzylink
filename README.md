@@ -3,7 +3,7 @@ A Python program implementing fuzzy matching between two sets of records.
 
 This takes a Pandas DataFrame with potential duplicate rows and matches
 them based on the columns you specify. It then returns two dataframes,
-one with matched obeservations and one with unmatched observations.
+one with matched observations and one with unmatched observations.
 It requires at least one column on which to make an exact match and allows
 fuzzy matches based on any other columns.
 
