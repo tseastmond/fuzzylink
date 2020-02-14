@@ -12,6 +12,7 @@ from jellyfish import jaro_winkler
 import numpy as np
 import pandas as pd
 import sys
+from time import time
 
 
 
@@ -196,7 +197,7 @@ def Match(df, exact, nomismatch=[], fuzzy=[], agg='mode', strthresh=0.9,
         {'mode' : [col1, col2, col3], 'sum' : [col6], 'mean' : [col5, col7]}
 
     it will then apply the different aggregation to each of the columns.
-    Requires the Python jellyfish, pandas, and sys modules.
+    Requires the Python jellyfish, os, pandas, sys, and time modules.
 
     Parameters
     ----------
@@ -244,37 +245,35 @@ def Match(df, exact, nomismatch=[], fuzzy=[], agg='mode', strthresh=0.9,
 
     # Define the matches DataFrame.
     matched = pd.DataFrame()
+    unmatched = pd.DataFrame()
 
 
     # Combine our exact columns into one.
-    unmatched = df.copy()
-    unmatched['__exact__'] = ''
+    full = df.copy()
+    full['__exact__'] = ''
 
     for col in exact:
-        unmatched['__exact__'] += ',' + unmatched[col]
+        full['__exact__'] += ',' + full[col]
 
 
     # Fill missing values with missing string.
-    unmatched.fillna('', inplace=True)
+    full.fillna('', inplace=True)
+
+
+    # Get the unique values of exact columns.
+    vals = full['__exact__'].value_counts().reset_index().query('index != "," and __exact__ > 1')['index']
+
+
+    # Start the timer.
+    start_time = time()
 
 
     # Loop over unique values of exact columns.
-    vals = unmatched['__exact__'].value_counts().reset_index().query('index != "," and __exact__ > 1')['index']
-
     total = 0
     count = disp
     for val in vals:
         # Make a new DataFrame to house matches on exact.
-        temp = unmatched.loc[unmatched['__exact__'] == val, :].reset_index(drop=True)
-
-
-        # Update total to track our progress.
-        total += 1
-
-        # Print our progress.
-        if count - round((total/len(vals))*100,2) <= 0:
-            print('Progress:', round((total/len(vals))*100,2), '%')
-            count += disp
+        temp = full.loc[full['__exact__'] == val, :].reset_index(drop=True)
 
 
         # Check for discrepancies in the nomismatch columns and fuzzy columns.
@@ -289,8 +288,20 @@ def Match(df, exact, nomismatch=[], fuzzy=[], agg='mode', strthresh=0.9,
 
             temp = temp.loc[~fil, :].reset_index(drop=True)
 
+            # Update total to track our progress.
+            total += len(new)
+
+            # Print our progress.
+            if count - round((total/len(full))*100,2) <= 0:
+                now = time()
+                print('Progress:      ', round((total/len(full))*100,2), '%')
+                print('Time Remaining:', round((((now-start_time)/total) * (len(full) - total))/3600,2), 'Hours')
+                print(' ')
+                count += disp
+
             # Move forward if only one observation.
             if len(new) == 1:
+                unmatched = unmatched.append(new, ignore_index=True)
                 continue
 
 
@@ -299,12 +310,14 @@ def Match(df, exact, nomismatch=[], fuzzy=[], agg='mode', strthresh=0.9,
 
 
     # Save to the unmatched DataFrame.
-    if len(matched) > 0:
-        unmatched = unmatched.loc[~(unmatched['__exact__'].isin(matched['__exact__']))]
-        matched.drop('__exact__', axis=1, inplace=True)
+    if len(full.query('__exact__ == ","')) > 0:
+        unmatched = unmatched.append(full.query('__exact__ == ","'), ignore_index=True)
 
 
     # Drop the __exact__ column.
+    if len(matched) > 0:
+        matched.drop('__exact__', axis=1, inplace=True)
+
     unmatched.drop('__exact__', axis=1, inplace=True)
 
 

@@ -14,4 +14,4 @@ If you pass a dictionary into agg of the following form:
     {'mode' : [col1, col2, col3], 'sum' : [col6], 'mean' : [col5, col7]}
 
 it will then apply the different aggregation to each of the columns.
-Requires the Python jellyfish, pandas, and sys modules.
+Requires the Python jellyfish, pandas, sys, and time modules.
