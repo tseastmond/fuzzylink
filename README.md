@@ -21,33 +21,24 @@ Requires the Python jellyfish, pandas, sys, and time modules.
 
 ### Original DataFrame (called df):
 
-|fl	|	pid	|	birthdate	|	deathdate	|	serial	   |	state		|
-|---|-------|---------------|---------------|--------------|----------------|
-|Fu	|		|			|			|		   |	New York	|
-|Ta	|		|	13 Oct 1918	|			|		   |	New York	|
-|Ca	|		|	09 Oct 1918	|			|	2721800.0  |	Vermont		|
-|Fu	|		|	05 Oct 1918	|			|	1706020	   |	New York	|
-|Ta	|		|	13 Oct 1918	|			|		   |	New York	|
+|fl|pid|birthdate|deathdate|serial|state|name|firstname|middlename|lastname|url|index|
+|--|--|--|--|--|--|--|--|--|--|--|--|
+|Fu	|		|			|			|		   |	New York	|Achille Funatelle	|	Achille		|			|	Funatelle	|http://genealogytrails.com/ny/ww1soldiers.html	|	24770 	 |
+|Ta	|		|	13 Oct 1918	|			|		   |	New York	|Abernethy S Taylor	|	Abernethy	|	S		|	Taylor		|https://www.honorstates.org/index.php?id=150576	|	72656 	 |
+|Ca	|		|	09 Oct 1918	|			|	2721800.0  |	Vermont		|Achille Capute		|	Achille		|			|	Capute		|https://catalog.archives.gov/id/34391830	|	94085	 |
+|Fu	|		|	05 Oct 1918	|			|	1706020	   |	New York	|Achille Funatelli	|	Achille		|			|	Funatelli	|https://catalog.archives.gov/id/34390682	|	104910	 |
+|Ta	|		|	13 Oct 1918	|			|		   |	New York	|Abernathy S Taylor	|	Abernathy	|	S		|	Taylor		|https://catalog.archives.gov/id/34390682	|	135266	 |
 
 
 
-name			|	firstname	|	middlename	|	lastname	|
--------------------------------------------------------------------------------------------------
-Achille Funatelle	|	Achille		|			|	Funatelle	|
-Abernethy S Taylor	|	Abernethy	|	S		|	Taylor		|
-Achille Capute		|	Achille		|			|	Capute		|
-Achille Funatelli	|	Achille		|			|	Funatelli	|
-Abernathy S Taylor	|	Abernathy	|	S		|	Taylor		|
 
 
-
-url						|	index 	 |
 ------------------------------------------------------------------
-http://genealogytrails.com/ny/ww1soldiers.html	|	24770 	 |
-https://www.honorstates.org/index.php?id=150576	|	72656 	 |
-https://catalog.archives.gov/id/34391830	|	94085	 |
-https://catalog.archives.gov/id/34390682	|	104910	 |
-https://catalog.archives.gov/id/34390682	|	135266	 |
+
+
+
+
+
 
 
 ### Code:
