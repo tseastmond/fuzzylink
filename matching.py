@@ -61,8 +61,13 @@ def RowFilter(row, val, nomismatch=[], fuzzy=[], strthresh=0.9,
 
     # First check the nomismatch columns.
     for col in nomismatch:
-        if row[col] not in ['', val[col]]:
-            return False
+        if pd.isnull(row[col]) or pd.isnull(val[col]):
+            pass
+        elif str(row[col]).strip() == '' or str(val[col]).strip() == '':
+            pass
+        else:
+            if str(row[col]).strip() != str(val[col]).strip():
+                return False
 
 
     # Next check the fuzzy columns.
@@ -79,6 +84,8 @@ def RowFilter(row, val, nomismatch=[], fuzzy=[], strthresh=0.9,
                     return False
         else:
             if allowmiss and (pd.isnull(row[col]) or pd.isnull(val[col])):
+                pass
+            elif (row[col] == '' or pd.isnull(row[col])) and (val[col] == '' or pd.isnull(val[col])):
                 pass
             elif pd.isnull(row[col]) or pd.isnull(val[col]):
                 return False
