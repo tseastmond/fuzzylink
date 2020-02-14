@@ -72,12 +72,16 @@ def RowFilter(row, val, nomismatch=[], fuzzy=[], strthresh=0.9,
                 pass
             elif (row[col] == '' or pd.isnull(row[col])) and (val[col] == '' or pd.isnull(val[col])):
                 pass
+            elif pd.isnull(row[col]) or pd.isnull(val[col]):
+                return False
             else:
                 if jaro_winkler(row[col], val[col]) < strthresh[col]:
                     return False
         else:
             if allowmiss and (pd.isnull(row[col]) or pd.isnull(val[col])):
                 pass
+            elif pd.isnull(row[col]) or pd.isnull(val[col]):
+                return False
             else:
                 if abs(row[col] - val[col]) > numthresh[col]:
                     return False
@@ -141,8 +145,9 @@ def RowAgg(col, agg='mode'):
     # Check what the specified mode of aggregation is.
     if col.name in agg['mode']:
         # For 'mode', return the mode of the column. If the mode is an empty string,
-        #   return that only if it is the only possible value. This assumes at
-        #   least one nonmissing value.
+        #   return that only if it is the only possible value.
+        col.fillna('', inplace=True)
+
         if col.value_counts().index[0] != '' or len(col.value_counts().index) == 1:
             return col.value_counts().index[0]
 
@@ -163,11 +168,15 @@ def RowAgg(col, agg='mode'):
 
     elif col.name in agg['len']:
         # For 'len', return the longest string in the column.
+        col.fillna('', inplace=True)
+
         return sorted(col, key=len)[-1]
 
     elif col.name in agg['all']:
         # For 'all', concatenate all values in the column into a list and
         #   return that list.
+        col.fillna('', inplace=True)
+
         return list(col.value_counts().index)
 
     else:
@@ -257,11 +266,12 @@ def Match(df, exact, nomismatch=[], fuzzy=[], agg='mode', strthresh=0.9,
 
 
     # Fill missing values with missing string.
-    full.fillna('', inplace=True)
+    full['__exact__'].fillna('', inplace=True)
 
 
-    # Get the unique values of exact columns.
+    # Get the unique values of exact columns and save the singular values.
     vals = full['__exact__'].value_counts().reset_index().query('index != "," and __exact__ > 1')['index']
+    vals1 = full['__exact__'].value_counts().reset_index().query('index == "," or __exact__ == 1')['index']
 
 
     # Start the timer.
@@ -270,10 +280,12 @@ def Match(df, exact, nomismatch=[], fuzzy=[], agg='mode', strthresh=0.9,
 
     # Loop over unique values of exact columns.
     total = 0
+    check = 0
     count = disp
     for val in vals:
         # Make a new DataFrame to house matches on exact.
         temp = full.loc[full['__exact__'] == val, :].reset_index(drop=True)
+        check += len(temp)
 
 
         # Check for discrepancies in the nomismatch columns and fuzzy columns.
@@ -310,8 +322,8 @@ def Match(df, exact, nomismatch=[], fuzzy=[], agg='mode', strthresh=0.9,
 
 
     # Save to the unmatched DataFrame.
-    if len(full.query('__exact__ == ","')) > 0:
-        unmatched = unmatched.append(full.query('__exact__ == ","'), ignore_index=True)
+    if len(full.loc[full['__exact__'].isin(vals1)]) > 0:
+        unmatched = unmatched.append(full.loc[full['__exact__'].isin(vals1), :], ignore_index=True)
 
 
     # Drop the __exact__ column.
