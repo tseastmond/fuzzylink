@@ -23,23 +23,11 @@ Requires the Python jellyfish, pandas, sys, and time modules.
 
 |fl|pid|birthdate|deathdate|serial|state|name|firstname|middlename|lastname|url|index|
 |--|--|--|--|--|--|--|--|--|--|--|--|
-|Fu	|		|			|			|		   |	New York	|Achille Funatelle	|	Achille		|			|	Funatelle	|http://genealogytrails.com/ny/ww1soldiers.html	|	24770 	 |
-|Ta	|		|	13 Oct 1918	|			|		   |	New York	|Abernethy S Taylor	|	Abernethy	|	S		|	Taylor		|https://www.honorstates.org/index.php?id=150576	|	72656 	 |
-|Ca	|		|	09 Oct 1918	|			|	2721800.0  |	Vermont		|Achille Capute		|	Achille		|			|	Capute		|https://catalog.archives.gov/id/34391830	|	94085	 |
-|Fu	|		|	05 Oct 1918	|			|	1706020	   |	New York	|Achille Funatelli	|	Achille		|			|	Funatelli	|https://catalog.archives.gov/id/34390682	|	104910	 |
-|Ta	|		|	13 Oct 1918	|			|		   |	New York	|Abernathy S Taylor	|	Abernathy	|	S		|	Taylor		|https://catalog.archives.gov/id/34390682	|	135266	 |
-
-
-
-
-
-------------------------------------------------------------------
-
-
-
-
-
-
+|Fu|||||New York|Achille Funatelle|Achille||Funatelle|http://genealogytrails.com/ny/ww1soldiers.htm|24770|
+|Ta|||13 Oct 1918||New York|Abernethy S Taylor|Abernethy|S|Taylor|https://www.honorstates.org/index.php?id=150576|72656|
+|Ca|||09 Oct 1918|2721800.0|Vermont|Achille Capute|Achille||Capute|https://catalog.archives.gov/id/34391830|94085|
+|Fu|||05 Oct 1918|1706020|New York|Achille Funatelli|Achille||Funatelli|https://catalog.archives.gov/id/34390682|104910|
+|Ta|||13 Oct 1918||New York|Abernathy S Taylor|Abernathy|S|Taylor|https://catalog.archives.gov/id/34390682|135266|
 
 ### Code:
 
@@ -49,48 +37,21 @@ matched, unmatched = Match(df, ['fl'], nomismatch=['pid', 'birthdate', 'deathdat
                            disp=0.1, agg={'mode' : cols, 'all' : ['url', 'index'], 'len' : ['name']})
 
 
-This code will run over the data, blocking on the column 'fl'. It will then check the columns specified in 'nomismatch' (['pid', 'birthdate', 'deathdate', 'serial', 'state']) and eliminate those matches within the block where the columns specified contain mismatching non-empty values. After it will check those columns specified in 'fuzzy' (['name', 'firstname', 'middlename', 'lastname']) and eliminate matches whose jarowinkler score is less than that specified in 'strthresh' (in this case I specified a lower threshold for middle name since some names only have a middle initial). I also set 'allowmiss' to 'True' to allow missing values to still be matches in the jarowinkler. Lastly I aggregate using the mode for all columns except 'url' and 'index', for which I collect all values into a list, and 'name', for which I take the longest value.
+This code will run over the data, blocking on the column 'fl' (first two letters of last name). It will then check the columns specified in 'nomismatch' (['pid', 'birthdate', 'deathdate', 'serial', 'state']) and eliminate those matches within the block where the columns specified contain mismatching non-empty values. After it will check those columns specified in 'fuzzy' (['name', 'firstname', 'middlename', 'lastname']) and eliminate matches whose jarowinkler score is less than that specified in 'strthresh' (in this case I specified a lower threshold for middle name since some names only have a middle initial). I also set 'allowmiss' to 'True' to allow missing values to still be matches in the jarowinkler. Lastly I aggregate using the mode for all columns except 'url' and 'index', for which I collect all values into a list, and 'name', for which I take the longest value.
 
 
 ### Results:
 
 #### Matched DataFrame:
 
-fl	|	pid	|	birthdate	|	deathdate	|	serial	   |	state		|
------------------------------------------------------------------------------------------------------------------
-Fu	|		|	05 Oct 1918	|			|	1706020	   |	New York	|
-Ta	|		|	13 Oct 1918	|			|		   |	New York	|
-
-
-
-name			|	firstname	|	middlename	|	lastname	|
--------------------------------------------------------------------------------------------------
-Achille Funatelli	|	Achille		|			|	Funatelli	|
-Abernathy S Taylor	|	Abernathy	|	S		|	Taylor		|
-
-
-
-url												|	index 		 |
---------------------------------------------------------------------------------------------------------------------------
-['http://genealogytrails.com/ny/ww1soldiers.html', 'https://catalog.archives.gov/id/34390682']	|	[104910, 24770]	 |
-['https://www.honorstates.org/index.php?id=150576', 'https://catalog.archives.gov/id/34390682']	|	[135266, 72656]  |
-
+|fl|pid|birthdate|deathdate|serial|state|name|firstname|middlename|lastname|url|index|
+|--|--|--|--|--|--|--|--|--|--|--|--|
+|Fu|||05 Oct 1918|1706020|New York|Achille Funatelli|Achille||Funatelli|['http://genealogytrails.com/ny/ww1soldiers.html', 'https://catalog.archives.gov/id/34390682']|[104910, 24770]|
+|Ta|||13 Oct 1918||New York|Abernathy S Taylor|Abernathy|S|Taylor|['https://www.honorstates.org/index.php?id=150576', 'https://catalog.archives.gov/id/34390682']|[135266, 72656]|
 
 #### Unmatched DataFrame:
 
-fl	|	pid	|	birthdate	|	deathdate	|	serial	   |	state		|
------------------------------------------------------------------------------------------------------------------
-Ca	|		|	09 Oct 1918	|			|	2721800.0  |	Vermont		|
-
-
-
-name			|	firstname	|	middlename	|	lastname	|
--------------------------------------------------------------------------------------------------
-Achille Capute		|	Achille		|			|	Capute		|
-
-
-
-url						|	index 	 |
-------------------------------------------------------------------
-https://catalog.archives.gov/id/34391830	|	94085	 |
+|fl|pid|birthdate|deathdate|serial|state|name|firstname|middlename|lastname|url|index|
+|--|--|--|--|--|--|--|--|--|--|--|--|
+|Ca|||09 Oct 1918|2721800.0|Vermont|Achille Capute|Achille||Capute|https://catalog.archives.gov/id/34391830|94085|
 
