@@ -5,13 +5,14 @@ Author: Tanner S Eastmond
 Date Updated: 2/18/2020
 Purpose: This includes a few functions to match places based on geographic
     distance using latitude and longitude coordinates. These functions use
-    numpy, pandas, and scipy.spatial.distance.cdist.
+    numpy, pandas, scipy.spatial.distance.cdist, and time.time.
 
 '''
 
 import numpy as np
 import pandas as pd
 from scipy.spatial.distance import cdist
+from time import time
 
 
 
@@ -51,6 +52,10 @@ def GetNClosest(data1, data2, indecies, latvars, lonvars, nummatches=10,
     'data1' and the second being a list with the specified number of indecies
     for the closest places from 'data2'.
     '''
+    # Start the timer.
+    start_time = time()
+
+
     # Copy each data set.
     df1 = data1.copy().reset_index(drop=True)
     df2 = data2.copy().reset_index(drop=True)
@@ -66,14 +71,19 @@ def GetNClosest(data1, data2, indecies, latvars, lonvars, nummatches=10,
 
         # Make a DataFrame for the return values.
         df1.loc[x:x+chunksize, '__matches__'] = args
-        print(df1)
-        print(x)
 
         # Get the correct indecies from the original DataFrame 2.
         if nummatches == 1:
             df1.loc[x:x+chunksize, '__matches__'] = df1.loc[x:x+chunksize, '__matches__'].apply(lambda x: df2[indecies[1]].loc[int(x)])
         else:
             df1.loc[x:x+chunksize, '__matches__'] = df1.loc[x:x+chunksize, '__matches__'].apply(lambda x: [df2[indecies[1]].loc[y] for y in x])
+
+
+        # Print the time.
+        now = time()
+        print('Progress:      ', round((x/len(df1))*100,2), '%')
+        print('Time Remaining:', round((((now-start_time)/(x+chunksize)) * (len(df1) - min(x + chunksize, len(df1))))/3600,3), 'Hours')
+        print(' ')
 
 
     # Keep only the two index columns and return.
