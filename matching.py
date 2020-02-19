@@ -2,8 +2,7 @@
 # -*- coding: utf-8 -*-
 '''
 Author: Tanner S Eastmond
-Date Updated: 2/12/2020
-Version: 1.1
+Date Updated: 2/18/2020
 Purpose: This is a program used to perform fuzzy matches between two sets of
   records.
 '''
@@ -24,11 +23,14 @@ from time import time
 def RowFilter(row, val, nomismatch=[], fuzzy=[], strthresh=0.9,
               numthresh=1, allowmiss=False):
     '''
+    Description
+    -----------
     Compares two series of data and returns 'True' if the series are a match
     based on the specified criteria or 'False' otherwise.
 
     This is an appendage to Match(.) and is intended for use in an 'apply' or
     'map' command.
+
 
     Parameters
     ----------
@@ -46,6 +48,7 @@ def RowFilter(row, val, nomismatch=[], fuzzy=[], strthresh=0.9,
     numthresh  - float - The threshold for numeric variables absolute
                  difference outside of which the rows are not a match.
     allowmiss  - bool - Allow a mismatch in fuzzy due to missing values.
+
 
     Returns
     -------
@@ -106,10 +109,13 @@ def RowFilter(row, val, nomismatch=[], fuzzy=[], strthresh=0.9,
 # Make a function to aggregate rows.
 def RowAgg(col, agg='mode'):
     '''
+    Description
+    -----------
     Aggregates all passed rows into one based on the specified criteria.
 
     This is an appendage to Match(.) and is intended for use in an 'apply' or
     'map' command.
+
 
     Parameters
     ----------
@@ -130,6 +136,8 @@ def RowAgg(col, agg='mode'):
 
                            {'mode' : [col1, col2, col3], 'sum' : [col6],
                            'mean' : [col5, col7]}
+
+
     Returns
     -------
     A single value aggregated from the column as specified.
@@ -200,6 +208,8 @@ def RowAgg(col, agg='mode'):
 def Match(df, exact, nomismatch=[], fuzzy=[], agg='mode', strthresh=0.9,
           numthresh=1, allowmiss=False, disp=5):
     '''
+    Description
+    -----------
     This takes a Pandas DataFrame with potential duplicate rows and matches
     them based on the columns you specify. It then returns two dataframes,
     one with matched observations and one with unmatched observations.
@@ -214,6 +224,7 @@ def Match(df, exact, nomismatch=[], fuzzy=[], agg='mode', strthresh=0.9,
 
     it will then apply the different aggregation to each of the columns.
     Requires the Python jellyfish, os, pandas, sys, and time modules.
+
 
     Parameters
     ----------
