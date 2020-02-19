@@ -70,12 +70,13 @@ def GetNClosest(data1, data2, indecies, latvars, lonvars, nummatches=10,
 
 
         # Make a DataFrame for the return values.
-        df1.loc[x:x+chunksize, '__matches__'] = pd.Series(args)
 
         # Get the correct indecies from the original DataFrame 2.
         if nummatches == 1:
+            df1.loc[x:x+chunksize, '__matches__'] = args
             df1.loc[x:x+chunksize, '__matches__'] = df1.loc[x:x+chunksize, '__matches__'].apply(lambda x: df2[indecies[1]].loc[int(x)])
         else:
+            df1.loc[x:x+chunksize, '__matches__'] = pd.Series(args)
             df1.loc[x:x+chunksize, '__matches__'] = df1.loc[x:x+chunksize, '__matches__'].apply(lambda x: [df2[indecies[1]].loc[y] for y in x])
 
 
