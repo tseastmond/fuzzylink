@@ -37,7 +37,6 @@ Requires the Python jellyfish, pandas, sys, and time modules.
 
 #### Code:
 
-
     matched, unmatched = Match(df, ['fl'], nomismatch=['pid', 'birthdate', 'deathdate', 'serial', 'state'], 
                            fuzzy=['name', 'firstname', 'middlename', 'lastname'], strthresh={'name' : 0.85,
                                  'firstname' : 0.9, 'middlename' : 0.7, 'lastname' : 0.9}, allowmiss=True,
@@ -46,8 +45,8 @@ Requires the Python jellyfish, pandas, sys, and time modules.
 
 This code will run over the data, blocking on the column 'fl' (first two letters of last name). It will then check the columns specified in 'nomismatch' (['pid', 'birthdate', 'deathdate', 'serial', 'state']) and eliminate those matches within the block where the columns specified contain mismatching non-empty values. After it will check those columns specified in 'fuzzy' (['name', 'firstname', 'middlename', 'lastname']) and eliminate matches whose jarowinkler score is less than that specified in 'strthresh' (in this case I specified a lower threshold for middle name since some names only have a middle initial). I also set 'allowmiss' to 'True' to allow missing values to still be matches in the jarowinkler. Lastly I aggregate using the mode for all columns except 'url' and 'index', for which I collect all values into a list, and 'name', for which I take the longest value.
 
-
 #### Results:
+
 
 ##### Matched DataFrame:
 
@@ -61,7 +60,5 @@ This code will run over the data, blocking on the column 'fl' (first two letters
 |fl|pid|birthdate|deathdate|serial|state|name|firstname|middlename|lastname|url|index|
 |--|--|--|--|--|--|--|--|--|--|--|--|
 |Ca|||09 Oct 1918|2721800.0|Vermont|Achille Capute|Achille||Capute|https://catalog.archives.gov/id/34391830|94085|
-
-
 
 
