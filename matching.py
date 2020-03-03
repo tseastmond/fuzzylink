@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 '''
 Author: Tanner S Eastmond
-Date Updated: 2/18/2020
+Date Updated: 3/2/2020
 Purpose: This is a program used to perform fuzzy matches between two sets of
   records.
 '''
@@ -205,7 +205,7 @@ def RowAgg(col, agg='mode'):
 ###############################################################################
 ###############################################################################
 # Make a function for matching.
-def Match(df, exact, nomismatch=[], fuzzy=[], agg='mode', strthresh=0.9,
+def Match(df, exact, nomismatch=[], fuzzy=[], onlycheck='', agg='mode', strthresh=0.9,
           numthresh=1, allowmiss=False, disp=5):
     '''
     Description
@@ -235,6 +235,15 @@ def Match(df, exact, nomismatch=[], fuzzy=[], agg='mode', strthresh=0.9,
     fuzzy      - list - List of columns requiring a fuzzy match, with the
                  threshold specified by strthresh or numthresh, depending
                  on the column type.
+    onlycheck  - str - The name of a column with only True and False, where
+                 True signifies that the row is to be matched against
+                 all other observations and False signifies that a row is to be
+                 including in the comparison pool for other matches but not
+                 matched itself. If a column name is specified for this variable
+                 then there cannot be any cases in the matched sample where only
+                 rows with False specified are matched together since those
+                 rows will not be explicitly checked against the comparison
+                 pool.
     agg        - str or dict - The mode of aggregation for columns not
                  specified in 'exact'. May be one of the following,
                  the default is 'mode':
@@ -297,6 +306,11 @@ def Match(df, exact, nomismatch=[], fuzzy=[], agg='mode', strthresh=0.9,
 
 
     # Loop over unique values of exact columns.
+    if onlycheck == '':
+        fulllen = len(full)
+    else:
+        fulllen = len(full.loc[full[onlycheck] == True])
+
     total = 0
     check = 0
     count = disp
@@ -306,8 +320,20 @@ def Match(df, exact, nomismatch=[], fuzzy=[], agg='mode', strthresh=0.9,
         check += len(temp)
 
 
+        # Sort the values correctly if onlycheck is specified.
+        if onlycheck != '':
+            temp.sort_values(onlycheck, ascending=False, inplace=True)
+
+
         # Check for discrepancies in the nomismatch columns and fuzzy columns.
         while len(temp) > 0:
+            # Stop if onlycheck is specified and the specified sample is done.
+            if onlycheck != '':
+                if temp[onlycheck].sum() == 0:
+                    unmatched = unmatched.append(temp, ignore_index=True)
+                    break
+
+
             # Get the matching indecies for the first entry.
             fil = temp.apply(RowFilter, axis=1, args=(temp.loc[0],
                 nomismatch, fuzzy, strthresh,
@@ -319,13 +345,16 @@ def Match(df, exact, nomismatch=[], fuzzy=[], agg='mode', strthresh=0.9,
             temp = temp.loc[~fil, :].reset_index(drop=True)
 
             # Update total to track our progress.
-            total += len(new)
+            if onlycheck == '':
+                total += len(new)
+            else:
+                total += len(new.loc[new[onlycheck] == True])
 
             # Print our progress.
-            if count - round((total/len(full))*100,2) <= 0:
+            if count - round((total/fulllen)*100,2) <= 0:
                 now = time()
-                print('Progress:      ', round((total/len(full))*100,2), '%')
-                print('Time Remaining:', round((((now-start_time)/total) * (len(full) - total))/3600,2), 'Hours')
+                print('Progress:      ', round((total/fulllen)*100,2), '%')
+                print('Time Remaining:', round((((now-start_time)/total) * (fulllen - total))/3600,2), 'Hours')
                 print(' ')
                 count += disp
 
