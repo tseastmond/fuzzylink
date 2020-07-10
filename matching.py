@@ -191,9 +191,10 @@ def RowAgg(col, agg='mode'):
     elif col.name in agg['all']:
         # For 'all', concatenate all values in the column into a list and
         #   return that list.
-        col.fillna('', inplace=True)
+        col = col.loc[(col != '') & (col.notnull())]
+        #col.fillna('', inplace=True)
 
-        return list(col.value_counts().index)
+        return ';;'.join([str(x) for x in col.value_counts().index])
 
     else:
         # If nothing is specified, return the first value.
@@ -206,7 +207,7 @@ def RowAgg(col, agg='mode'):
 ###############################################################################
 ###############################################################################
 # Make a function to loop over unique blocks.
-def Loop(matched, unmatched, full, vals, procnum, output, fulllen, start_time,  
+def Loop(matched, unmatched, full, vals, procnum, output, start_time,  
          nomismatch, fuzzy, onlycheck, agg, strthresh, numthresh, allowmiss, 
          disp):
     '''
@@ -277,6 +278,12 @@ def Loop(matched, unmatched, full, vals, procnum, output, fulllen, start_time,
     Two dataframes, the first with matched values and the second with unmatched 
     values.
     '''
+    # Loop over unique values of exact columns.
+    if onlycheck == '':
+        fulllen = len(full.loc[full['__exact__'].isin(vals)])
+    else:
+        fulllen = len(full.loc[(full[onlycheck] == True) & (full['__exact__'].isin(vals))])
+    
     total = 0
     check = 0
     count = disp
@@ -441,7 +448,7 @@ def Match(df, exact, nomismatch=[], fuzzy=[], onlycheck='', agg='mode', strthres
     full['__exact__'] = ''
 
     for col in exact:
-        full['__exact__'] += ',' + full[col]
+        full['__exact__'] += ',' + full[col].astype(str)
 
 
     # Fill missing values with missing string.
@@ -467,26 +474,22 @@ def Match(df, exact, nomismatch=[], fuzzy=[], onlycheck='', agg='mode', strthres
 
     # Start the timer.
     start_time = time()
-
-
-    # Loop over unique values of exact columns.
-    if onlycheck == '':
-        fulllen = len(full)
-    else:
-        fulllen = len(full.loc[full[onlycheck] == True])
-        
+       
         
     # Split up the unique values into the number of designated cores.
     # Make a list of empty lists.
     splitvals = [[] for _ in range(cores)]
     
     # Loop over vals. Since the values that will take the longest are ordered 
-    # first to last, we want to split them over processes.
-    for num in range(0, len(vals), cores):
-        # Loop again to assign to different processes.
-        for num1 in range(num, min(num+cores, len(vals))):
-            splitvals[num1%cores].append(vals[num1])
-            
+    # first to last, we want to split them over processes.    
+    _temp = pd.DataFrame(vals, columns=['n']).reset_index()    
+    _temp['index'] = _temp['index']%cores
+    
+    for num in range(cores):
+        splitvals[num] = list(_temp.loc[_temp['index'] == num, 'n'])
+        
+    del _temp
+
             
     # Give extra values to the last processes as they will be done the fastest.
     for num in range(len(splitvals)):
@@ -511,7 +514,7 @@ def Match(df, exact, nomismatch=[], fuzzy=[], onlycheck='', agg='mode', strthres
     for proc in range(1, cores+1):
         # Initialize the process.
         p = Process(target=Loop, args=(matched.copy(), unmatched.copy(), full, 
-                                                    splitvals[proc-1], proc, output, fulllen, 
+                                                    splitvals[proc-1], proc, output, 
                                                     start_time, nomismatch, fuzzy, 
                                                     onlycheck, agg, strthresh, 
                                                     numthresh, allowmiss, disp))
