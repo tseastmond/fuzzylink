@@ -1,4 +1,4 @@
-# FuzzyMatching
+# fuzzylink
 
 This repository contains a set of tools for matching records together when no exact key exists between the two records. These tools include fuzzy matching of records based on string or numerical characteristics (matching.py) and matching of places in records based on geographic distance (distance_matching.py).
 
