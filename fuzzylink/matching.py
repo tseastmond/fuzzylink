@@ -209,12 +209,7 @@ def Match(tomatch, comparison, idcols, exact, nomismatch=[], fuzzy=[],
     for proc in range(1, cores+1):
         if len(output['matched{0}'.format(proc)]) > 0:
             matched.update(output['matched{0}'.format(proc)])
-        
 
-    # Assign the output to a DataFrame and rename the columns.
-    for key, value in matched.items():
-        matched[key] = [value]
-        
     matched = pd.DataFrame.from_dict(matched, orient='index').reset_index()
     
     if len(matched) > 0:
@@ -222,12 +217,20 @@ def Match(tomatch, comparison, idcols, exact, nomismatch=[], fuzzy=[],
 
 
     # Save to the unmatched DataFrame.
-    if len(full) > 0:
-        temp = full.loc[full[onlycheck] == True, :].apply(lambda x:\
-                        [x[idcols[0]], set()],\
-                        axis=1, result_type='expand')
-        temp.columns = idcols
-        matched = matched.append(temp, ignore_index=True)
+    if onlycheck != '':
+        if len(full.loc[full[onlycheck] == True]) > 0:
+            temp = full.loc[full[onlycheck] == True, :].apply(lambda x:\
+                            [x[idcols[0]], set()],\
+                            axis=1, result_type='expand')
+            temp.columns = idcols
+            matched = matched.append(temp, ignore_index=True)
+    else:
+        if len(full) > 0:
+            temp = full.apply(lambda x:\
+                            [x[idcols[0]], set()],\
+                            axis=1, result_type='expand')
+            temp.columns = idcols
+            matched = matched.append(temp, ignore_index=True)
 
 
     # Return the two DataFrames.

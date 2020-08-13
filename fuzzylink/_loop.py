@@ -193,9 +193,10 @@ def _loop(full, vals, idcols, procnum, output, progress, exact,
         #  output dictionary.
         progress['m'+str(procnum)] += len(new)
         
-        for x in np.unique(matchedvals[idcols[0]]):
-            if x not in new.keys():
-                new[x] = set()
+        if dup:
+            for x in np.unique(matchedvals[idcols[0]]):
+                if x not in new.keys():
+                    new[x] = set()
         
         if onlycheck != '':
             progress['p'+str(procnum)] += len(np.where(arr[onlycheck] == True)[0])
