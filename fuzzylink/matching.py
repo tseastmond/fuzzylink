@@ -122,6 +122,18 @@ def Match(tomatch, comparison, idcols, exact, nomismatch=[], fuzzy=[],
     # Get the unique values of exact columns and save the singular values.
     vals = list(full.loc[full[onlycheck] == True, '__exact__'].value_counts()\
         .reset_index().query('index != ","')['index'])
+        
+        
+    # Keep only those rows with at least one row from tomatch and comparison in
+    #  the block.
+    full = full.loc[full['__exact__'].isin(vals), :]
+    temp = full.groupby('__exact__')['check'].count().reset_index()
+    temp.columns = ['__exact__', '__count__']
+    full = full.merge(temp, how='left', on='__exact__')
+    full = full.loc[full['__count__'] > 1, :]
+    
+    del temp
+    del full['__count__']
 
         
     # Split up the unique values into the number of designated cores.
