@@ -77,15 +77,14 @@ def DeDup(full, idvar, exact, nomismatch=[], fuzzy=[], strthresh=0.9,
     full = full[cols].copy()
     
     
-    # Combine our exact columns into one.
+    # Get a unique integer id for our 'exact' columns. 
     full['__exact__'] = ''
     
     for col in exact:
         full['__exact__'] += ',' + full[col].astype(str)
+        del full[col]
 
-
-    # Fill missing values with missing string.
-    full['__exact__'].fillna('', inplace=True)
+    full['__exact__'] = full['__exact__'].rank(method='dense', na_option='top').astype(int)
     
 
     # Get the unique values of exact columns.
@@ -141,10 +140,9 @@ def DeDup(full, idvar, exact, nomismatch=[], fuzzy=[], strthresh=0.9,
                                                 .isin(splitvals[proc-1])\
                                                 .copy()],
                                         splitvals[proc-1], [idvar, '__id__'], 
-                                        proc, output, progress, exact, 
-                                        nomismatch, fuzzy, '', strthresh,
-                                        numthresh, weight, allowmiss, None,
-                                        True))                            
+                                        proc, output, progress, nomismatch,
+                                        fuzzy, '', strthresh, numthresh,
+                                        weight, allowmiss, None, True))                            
         
         p.start()
         print('\n\nStarted Process', proc)

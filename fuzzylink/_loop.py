@@ -15,9 +15,9 @@ from ._rowfilter import _rowfilter
 ###############################################################################
 ###############################################################################
 # Make a function to loop over unique blocks.
-def _loop(full, vals, idcols, procnum, output, progress, exact,
-         nomismatch, fuzzy, onlycheck, strthresh, numthresh, weight, 
-         allowmiss, nummatches, dup=False):
+def _loop(full, vals, idcols, procnum, output, progress, nomismatch, fuzzy,
+          onlycheck, strthresh, numthresh, weight, allowmiss, nummatches,
+          dup=False):
     '''
     A function to loop over exact match blocks and compile matches.
     
@@ -38,8 +38,6 @@ def _loop(full, vals, idcols, procnum, output, progress, exact,
         A dictionary where the output from each process will be saved.
     progress : dict
         A dictionary used to report the progress from each process.
-    exact : list
-        A list of columns on which the algorithm matches exactly.
     nomismatch : list
         A list of columns requiring no discrepancy in nonmissing values, but
         it will allow a match between missing and a value.
@@ -113,7 +111,7 @@ def _loop(full, vals, idcols, procnum, output, progress, exact,
     else:
         onlycheckcol = [onlycheck]
     
-    cols = ['__exact__'] + exact + nomismatch + fuzzy + onlycheckcol + idcols 
+    cols = ['__exact__'] + nomismatch + fuzzy + onlycheckcol + idcols 
     cols = list(set(cols))
 
 

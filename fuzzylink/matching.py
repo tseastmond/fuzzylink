@@ -108,16 +108,15 @@ def Match(tomatch, comparison, idcols, exact, nomismatch=[], fuzzy=[],
     del comparison
     
     
-    # Combine our exact columns into one. 
+    # Get a unique integer id for our 'exact' columns. 
     full['__exact__'] = ''
     
     for col in exact:
         full['__exact__'] += ',' + full[col].astype(str)
+        del full[col]
 
-
-    # Fill missing values with missing string.
-    full['__exact__'].fillna('', inplace=True)
-
+    full['__exact__'] = full['__exact__'].rank(method='dense', na_option='top').astype(int)
+    
 
     # Get the unique values of exact columns and save the singular values.
     vals = list(full.loc[full[onlycheck] == True, '__exact__'].value_counts()\
@@ -127,7 +126,7 @@ def Match(tomatch, comparison, idcols, exact, nomismatch=[], fuzzy=[],
     # Keep only those rows with at least one row from tomatch and comparison in
     #  the block.
     full = full.loc[full['__exact__'].isin(vals), :]
-    temp = full.groupby('__exact__')['check'].count().reset_index()
+    temp = full.groupby('__exact__')[onlycheck].count().reset_index()
     temp.columns = ['__exact__', '__count__']
     full = full.merge(temp, how='left', on='__exact__')
     full = full.loc[full['__count__'] > 1, :]
@@ -183,8 +182,8 @@ def Match(tomatch, comparison, idcols, exact, nomismatch=[], fuzzy=[],
                                                 .isin(splitvals[proc-1])\
                                                 .copy()],
                                         splitvals[proc-1], idcols, proc,
-                                        output, progress, exact, nomismatch,
-                                        fuzzy, onlycheck, strthresh, numthresh,
+                                        output, progress, nomismatch, fuzzy,
+                                        onlycheck, strthresh, numthresh,
                                         weight, allowmiss, nummatches))                                      
         
         p.start()
