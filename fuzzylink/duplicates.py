@@ -81,7 +81,9 @@ def DeDup(full, idvar, exact, nomismatch=[], fuzzy=[], strthresh=0.9,
     full['__exact__'] = ''
     
     for col in exact:
-        full['__exact__'] += ',' + full[col].astype(str)
+        full[col] = full[col].fillna('').astype(str)
+        full = full.loc[full[col] != '', :]
+        full['__exact__'] += ',' + full[col]
         del full[col]
 
     full['__exact__'] = full['__exact__'].rank(method='dense', na_option='top').astype(int)
