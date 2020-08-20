@@ -18,7 +18,7 @@ from ._timer import _timer
 def DeDup(full, idvar, exact, nomismatch=[], fuzzy=[], strthresh=0.9, 
           numthresh=1, weight=1, allowmiss=False, disp=1, cores=1):
     '''
-    A function to identify duplicates within a Pandas DataFrame
+    A function to identify duplicates within a Pandas DataFrame. 
     
 
     Parameters
@@ -52,7 +52,6 @@ def DeDup(full, idvar, exact, nomismatch=[], fuzzy=[], strthresh=0.9,
     cores : int
         The number of process to run simultaneously.
             
-                 
     
     Returns
     -------
@@ -60,16 +59,6 @@ def DeDup(full, idvar, exact, nomismatch=[], fuzzy=[], strthresh=0.9,
     the second with a set containing all of the values of "idvar" that match
     with the given row.
     '''
-    '''
-    full = eeoc
-    
-    exact = ['fip2nm', 'addrstub', 'city_nm']
-    nomismatch=[]
-    fuzzy=['addr']
-    onlycheck=''
-    idcols=['involved_institution_seq', 'id1']
-    cores=20
-    '''    
     # Keep only relevant columns and copy the DataFrame.
     cols = exact + nomismatch + fuzzy + [idvar]
     cols = list(set(cols))

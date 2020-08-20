@@ -18,65 +18,66 @@ def Match(tomatch, comparison, idcols, exact, nomismatch=[], fuzzy=[],
           colmap='', strthresh=0.9, numthresh=1, weight=1, allowmiss=False, 
           disp=1, nummatches=None, cores=1):
     '''
-    This takes a Pandas DataFrame with potential duplicate rows and matches
-    them based on the columns you specify. It then returns two dataframes,
-    one with matched observations and one with unmatched observations.
-    It requires at least one column on which to make an exact match and allows
-    fuzzy matches based on any other columns.
-
-    The matched data will be collapsed (i.e. each row matched with other
-    rows will be collapsed into one row) based on the aggregation you specify.
-    If you pass a dictionary into agg of the following form:
-
-        {'mode' : [col1, col2, col3], 'sum' : [col6], 'mean' : [col5, col7]}
-
-    it will then apply the different aggregation to each of the columns.
-    Requires the Python jellyfish, os, pandas, sys, and time modules.
-
+    This takes two Pandas DataFrames and matches the observations together
+    according to the specified criteria.
 
     Parameters
     ----------
-    df         - Pandas DataFrame
-    exact      - list - List of columns requiring an exact match.
-    nomismatch - list - List of columns requiring no discrepancy in nonmissing
-                 values, but will allow a match between missing and a value.
-    fuzzy      - list - List of columns requiring a fuzzy match, with the
-                 threshold specified by strthresh or numthresh, depending
-                 on the column type.
-    onlycheck  - str - The name of a column with only True and False, where
-                 True signifies that the row is to be matched against
-                 all other observations and False signifies that a row is to be
-                 including in the comparison pool for other matches but not
-                 matched itself. If a column name is specified for this 
-                 variable then there cannot be any cases in the matched sample 
-                 where only rows with False specified are matched together 
-                 since those rows will not be explicitly checked against the 
-                 comparison pool.
-    strthresh  - float or dict - The threshold for Jaro-Winkler score below
-                 which the rows are not a match. If a dictionary is passed,
-                 it must have one entry per fuzzy column specifying
-                 the threshold for each.
-    numthresh  - float - The threshold for numeric variables absolute
-                 difference outside of which the rows are not a match.
-    allowmiss  - bool - Allow a mismatch in fuzzy due to missing values.
-    weight     - float or dict - The weight for each column to be applied in
-                 calculating the score.
-    disp       - float - How many seconds to wait before updating the progress
-                 display.
-    nummatches - None or int - None if all matches are to be collected or an
-                 integer if a particular number of matches is to be returned.
-    cores      - int - The number of separate processes to simultaneously run
-                 using the multiprocessing Process class.
-    idcols  - None or list - list with two values, the id variable for the
-                 rows to be matched first and the id variable for the 
-                 comparison pool second, None if the rows are to be 
-                 aggregated as described above.
-
-
+    tomatch : Pandas DataFrame
+        The full dataset containing the observations to be matched.
+    comparison : Pandas DataFrame
+        The full dataset containing the comparison observations.
+    idcols : list
+        A list where the first element is the name of the column which uniquely
+        identifies each row in the "tomatch" DataFrame and the second element
+        is the name of the column which uniquely identifies each row in the
+        "comparison" DataFrame.
+    exact : list
+        A list of columns on which the algorithm matches exactly. If the names
+        of columns to be compared are different in "tomatch" and "comparison",
+        this should be the names of the columns in "comparison" and "colmap"
+        will handle the name differences.
+    nomismatch : list
+        A list of columns requiring no discrepancy in nonmissing values, but
+        it will allow a match between missing and a value. If the names of
+        columns to be compared are different in "tomatch" and "comparison",
+        this should be the names of the columns in "comparison" and "colmap"
+        will handle the name differences.
+    colmap : dict
+        A dictionary with the names of the columns in "tomatch" as keys and the
+        names of the associated columns in "comparison".
+    fuzzy : list
+        A list of columns requiring a fuzzy match, with the threshold 
+        specified by strthresh or numthresh, depending on the column type. If
+        the names of columns to be compared are different in "tomatch" and
+        "comparison", this should be the names of the columns in "comparison"
+        and "colmap" will handle the name differences.
+    strthresh : float or dict
+        The threshold for Jaro-Winkler score below which the rows are not a 
+        match. If a dictionary is passed, it must have one entry per fuzzy 
+        column specifying the threshold for each.
+    numthresh : float
+        The threshold for numeric variables absolute difference outside of 
+        which the rows are not a match.
+    weight : float or dict
+        The weight for each column to be applied in calculating the score.       
+    allowmiss : bool
+        Allow a mismatch in fuzzy due to missing values.
+    disp : int or None
+        The number of seconds between each update of the printed output in the
+        console. If None there will be no printed progress in the console.
+    nummatches : int
+        The number of matches to find from the comparison pool.
+    cores : int
+        The number of process to run simultaneously.
+            
+    
     Returns
     -------
-    matched_df   - A Pandas DataFrame containing matched rows.
-    unmatched_df - A Pandas DataFrame containing unmatched rows.
+    A Pandas DataFrame with two columns, the first with the identifier from
+    "tomatch" specified in the first entry of "idcols" and the second with a
+    set containing all of the values of the identifier from "comparison"
+    specified in the second entry of "idcols" that match with the given row.
     '''
     # Get copies of our data and distinguish them.
     tomatch = tomatch.copy()
