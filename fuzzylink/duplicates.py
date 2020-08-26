@@ -2,12 +2,14 @@
 # -*- coding: utf-8 -*-
 
 from multiprocessing import Process, Manager
-import random
+from os import kill
+from random import shuffle
 from time import time, sleep
 
 import pandas as pd
 
 from ._loop import _loop
+from ._memory_check import _memory_check
 from ._timer import _timer
 
 
@@ -115,7 +117,13 @@ def DeDup(full, idvar, exact, nomismatch=[], fuzzy=[], strthresh=0.9,
     manager = Manager()
     output = manager.dict()
     progress = manager.dict()
+    processes = manager.list()
+        
     
+    # Start the memory check.
+    mem = Process(target=_memory_check, args=(processes,output), daemon=True)
+    mem.start()
+
     
     # Mark the start time.
     start_time = time()
@@ -126,7 +134,7 @@ def DeDup(full, idvar, exact, nomismatch=[], fuzzy=[], strthresh=0.9,
     full['__id__'] = full[idvar]
     for proc in range(1, cores+1):
         # Initialize the process.
-        random.shuffle(splitvals[proc-1]) # This will give more acurate timing
+        shuffle(splitvals[proc-1]) # This will give more acurate timing
         p = Process(target=_loop, args=(full.loc[full['__exact__']\
                                                 .isin(splitvals[proc-1])\
                                                 .copy()],
@@ -140,6 +148,11 @@ def DeDup(full, idvar, exact, nomismatch=[], fuzzy=[], strthresh=0.9,
         
         # Save the processes in a list.
         all_procs.append(p)
+        processes.append(p.pid)
+        
+        # Break if memory is too high.
+        if 'end' in output.keys():
+            raise MemoryError('Memory Usage Too High, Exiting...')
         
         # Drop the associated values from full so as to not double down on the
         #  memory usage.
@@ -149,15 +162,33 @@ def DeDup(full, idvar, exact, nomismatch=[], fuzzy=[], strthresh=0.9,
     # Start a process to track and print remaining time.
     if disp is not None:
         timer = Process(target=_timer,
-                        args=(progress, cores, start_time, disp),
-                        daemon=True)
+                        args=(progress, cores, start_time, disp), daemon=True)
+        processes.append(timer.pid)
         timer.start()
     
     
-    # Wait for all processes to finish, then terminate the timer.
+    # Wait for all processes to finish, make sure they all end in case of user
+    #  stopping the program.
     for p in all_procs:
-        p.join()
+        try:
+            p.join()
+        except KeyboardInterrupt:
+            for proc in processes:
+                try:
+                    kill(proc, 9)
+                    print('Killed', proc)
+                except:
+                    pass
+                
+                raise KeyboardInterrupt
+                
+                
+    # Break if processes ended because memory was too high.
+    if 'end' in output.keys():
+        raise MemoryError('Memory Usage Too High, Exiting...')
+
     
+    # Terminate the timer and memory check.
     if disp is not None:
         sleep(disp*2)
         timer.terminate()
