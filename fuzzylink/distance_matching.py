@@ -88,10 +88,15 @@ def GetNClosest(data1, data2, indecies, latvars, lonvars, nummatches=10,
 
 
     # Keep only the two index columns and return.
-    df1 = df1[[indecies[0], '__matches__']]
     if nummatches == 1:
         df1['__matches__'] = df1['__matches__'].astype(np.int64)
     else:
         df1['__matches__'] = df1['__matches__'].apply(lambda x: [int(y) for y in x])
+
+
+    # Drop if missing lat or lon.
+    df1 = df1.loc[(df1[latvars[0]].notnull()) & (df1[lonvars[0]].notnull())]
+    df1 = df1[[indecies[0], '__matches__']]
+
 
     return df1
